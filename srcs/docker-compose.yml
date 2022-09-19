@@ -1,37 +1,65 @@
-version: '3'
-  services:
-  mysql:
+version: '3.7'
+
+networks:
+  inception:
+
+volumes:
+  wordpress_volume:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/home/khammers/data/wordpress'
+  mariadb_volume:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: 'home/khammers/data/mariadb'
+
+services:
+  mariadb:
+    container_name: mariadb
+    build:
+      context: ./requirements/mariadb
+      args:
+        - DB_NAME=${DB_NAME}
+        - DB_USER=${DB_USER}
+        - DB_PASSWORD=${DB_PASSWORD}
+        - DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
     image: mariadb
+    networks:
+      - inception
     volumes:
-      - /data/mysql:/var/lib/mysql
-    environment:
-      # MYSQL_ROOT_PASSWORD: mysql_root_pass
-      # MYSQL_DATABASE: db_name
-      # MYSQL_USER: user_name
-      # MYSQL_PASSWORD: user_pass
+      - mariadb_volume:/var/lib/mysql
+    env_file:
+      - .env
     restart: always
+
   wordpress:
+    container_name: wordpress
+    build: ./requirements/wordpress
     image: wordpress
+    networks:
+      - inception
     volumes:
-      - /data/html:/var/www/html
+      - wordpress_volume:/var/www/wordpress
     depends_on:
-      - mysql
-    environment:
-      # WORDPRESS_DB_HOST: mysql
-      # MYSQL_ROOT_PASSWORD: mysql_root_pass
-      # WORDPRESS_DB_NAME: db_name
-      # WORDPRESS_DB_USER: user_name
-      # WORDPRESS_DB_PASSWORD: user_pass
-      # WORDPRESS_TABLE_PREFIX: wp_
-    links:
-      - mysql
+      - mariadb
+    env_file:
+      - .env
     restart: always
+
   nginx:
+    container_name: nginx
+    build: ./requirements/nginx
     image: nginx
-    volumes:
-      - nginx:/etc/nginx/conf.d
-      - /data/html:/var/www/html
     ports:
-      - 8080:80
-    links:
+      - "443:443"
+    networks:
+      - inception
+    depends_on:
       - wordpress
+    volumes:
+      - wordpress_volume:/var/www/wordpress
+    restart: always
