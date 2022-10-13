@@ -18,4 +18,5 @@ Rules:
       - It is mandatory to use environment variables
   
   Example of the expected result
+  
   ![Bildschirmfoto 2022-10-13 um 22 10 44](https://user-images.githubusercontent.com/80644370/195699602-08d5ba6c-6aff-4616-b0c8-edb3efc6949a.png)
